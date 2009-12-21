@@ -2,6 +2,9 @@
 // @name          Amazon Prices for Ireland
 // @namespace     http://www.17od.com/amazon-for-ireland
 // @description   Show prices on amazon.co.uk in euros with the Irish VAT rate applied
+// @version       1.1
+// @author        Adrian Smith
+// @homepage      http://github.com/adrian/Amazon-Prices-for-Ireland
 // @include       http://www.amazon.co.uk/*
 // @include       https://www.amazon.co.uk/*
 // @include       http://amazon.co.uk/*
