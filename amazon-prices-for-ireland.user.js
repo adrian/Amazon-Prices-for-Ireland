@@ -42,8 +42,8 @@
     }
 
     function getNode(xpath) {
-      var xpath_result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);    
-      return xpath_result.singleNodeValue;
+        var xpath_result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);    
+        return xpath_result.singleNodeValue;
     }
 
     // Return a string containing the Irish price
@@ -56,7 +56,8 @@
             irishVatRate = 0;
         }
 
-        GM_log("Determined irish VAT rate to be " + irishVatRate);
+        GM_log("Using the irish VAT rate: " + irishVatRate);
+        GM_log("Using the GBP to EUR FX rate: " + gbpToEurRate);
 
         var gbpExVATPrice = gbpPrice * 0.85; // UK VAT rate is 15%
         var euroPrice = gbpExVATPrice * gbpToEurRate;
@@ -95,28 +96,39 @@
 
     function updatePageWithIrishPrice() {
         // Find the GBP price
-        var price_node = getNode("//b[@class='priceLarge']");
-        if (price_node != null) {
+        var gbpPriceNode = getNode("//b[@class='priceLarge']");
+        if (gbpPriceNode != null) {
             // strip off the pound sign and comma
-	        var priceInGBP = parseFloat(price_node.innerHTML.replace(/\u00A3/, "").replace(/,/, ""));
-	        GM_log("priceInGBP=" + priceInGBP + ")");
+            var priceInGBP = parseFloat(gbpPriceNode.innerHTML.replace(/\u00A3/, "").replace(/,/, ""));
+            GM_log("priceInGBP=" + priceInGBP + ")");
 
-	        // Get the ex-VAT price, convert to EUR and add on the irish VAT
-	        var irishPrice = calculateIrishPrice(priceInGBP);
-	        GM_log("irishPrice=" + irishPrice + ")");
+            // Get the ex-VAT price, convert to EUR and add on the irish VAT
+            var irishPrice = calculateIrishPrice(priceInGBP);
+            GM_log("irishPrice=" + irishPrice + ")");
 
-	        // Get the node under which we're going to put a new TR with the irish price
-	        var pricingTBodyNode = getNode("//div[@id='priceBlock']/table/tbody");
+            // Get the TBODY node under which we're going to put a new TR with the irish price
+            // This node is 3 levels up from the GBP price node
+            var pricingTBodyNode = gbpPriceNode.parentNode.parentNode.parentNode;
 
-	        // Get the TR containing the GBP price. We're going to clone this node
-	        var ukPriceNode = getNode("//div[@id='priceBlock']/table/tbody/tr[2]");
+            // Get the TR containing the GBP price. We're going to clone this node
+            var gbpPriceTRNode = gbpPriceNode.parentNode.parentNode;
 
-	        // Create a new TR, populate it with the Irish price and add it to the TBODY
-	        var irishPriceNode = ukPriceNode.cloneNode(true);
-	        irishPriceNode.cells[0].innerHTML = "Irish Price:";
-	        irishPriceNode.cells[1].innerHTML = "<b class=\"priceLarge\">\u20ac" + irishPrice + "</b> (approximately)";
-	        pricingTBodyNode.appendChild(irishPriceNode);
-	    }
+            // Create a new TR, populate it with the Irish price and add it to the TBODY
+            var irishPriceNode = gbpPriceTRNode.cloneNode(true);
+            irishPriceNode.cells[0].innerHTML = "Irish Price:";
+            irishPriceNode.cells[1].innerHTML = "<b class=\"priceLarge\">\u20ac" + irishPrice + "</b> approximately. " + shippingMessage(priceInGBP);
+            pricingTBodyNode.appendChild(irishPriceNode);
+        }
+    }
+
+    function shippingMessage(priceInGBP) {
+        message = "";
+        if (priceInGBP >= 25) {
+            message = "May be eligible for free delivery with <a href=\"http://www.amazon.co.uk/gp/help/customer/display.html/?nodeId=200355380\"><b>Super Saver Delivery</b></a>.";
+        } else {
+            message = "Not including <a href=\"http://www.amazon.co.uk/gp/help/customer/display.html?ie=UTF8&nodeId=200395880\">shipping</a>.";
+        }
+        return message;
     }
 
     // If we have no rate or the rate hasn't been retrieved today then retrieve
