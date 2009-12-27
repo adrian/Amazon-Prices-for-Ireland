@@ -2,7 +2,7 @@
 // @name          Amazon Prices for Ireland
 // @namespace     http://www.17od.com/amazon-for-ireland
 // @description   Show prices on amazon.co.uk in euros with the Irish VAT rate applied
-// @version       1.1
+// @version       1.2
 // @author        Adrian Smith
 // @homepage      http://github.com/adrian/Amazon-Prices-for-Ireland
 // @include       http://www.amazon.co.uk/*
@@ -18,7 +18,8 @@
     var todayDate = new Date();
     var todayAsString = todayDate.getDate() + "/" + todayDate.getMonth() + "/" + todayDate.getFullYear();
 
-    var standardIrishVATRate = 0.215;
+    var IRISH_VAT_RATE = 0.215;
+    var UK_VAT_RATE = 0.15;
 
     function retrieveRate(callback) {
         GM_xmlhttpRequest({
@@ -26,7 +27,7 @@
                 url: "http://download.finance.yahoo.com/d/quotes.csv?s=GBPEUR=X&f=l1&e=.csv",
                 onload: function(responseDetails) {
                     var rate = parseFloat(responseDetails.responseText.replace(/[\r\n]/g, ""));
-                    GM_log("retrieved the rate " + rate);
+                    GM_log("retrieved the rate: " + rate);
                     // The amount added to rate below is to account for a
                     // difference between the GBP to EURO rate retrieved from 
                     // Yahoo and the one Amazon will use. It's not exact but
@@ -52,21 +53,27 @@
     // Return a string containing the Irish price
     function calculateIrishPrice(gbpPrice) {
 
-        var irishVatRate = standardIrishVATRate;
+        var irishVatRate = IRISH_VAT_RATE;
+        var ukVatRate = UK_VAT_RATE;
+        // Amazon add on about .03% for something else.
+        // Waste management charge perhaps (http://www.weeeregister.ie)?
+        var extraCharge = 0.03;
 
         // Books don't have VAT
         if (isBook()) {
             irishVatRate = 0;
+            ukVatRate = 0;
+            extraCharge = 0;
         }
 
         GM_log("Using the irish VAT rate: " + irishVatRate);
+        GM_log("Using the UK VAT rate: " + ukVatRate);
+        GM_log("Using the \"extraCharge\" rate: " + extraCharge);
         GM_log("Using the GBP to EUR FX rate: " + gbpToEurRate);
 
-        var gbpExVATPrice = gbpPrice * 0.85; // UK VAT rate is 15%
+        var gbpExVATPrice = gbpPrice * (1 - ukVatRate);
         var euroPrice = gbpExVATPrice * gbpToEurRate;
-        // Irish VAT rate is 21.5%. Amazon add on about .03% for something else.
-        // Waste management charge perhaps (http://www.weeeregister.ie)?
-        var irishPrice = euroPrice * ((1 + irishVatRate) + 0.03);
+        var irishPrice = euroPrice * ((1 + irishVatRate) + extraCharge);
 
         return irishPrice.toFixed(2);
     }
@@ -103,11 +110,11 @@
         if (gbpPriceNode != null) {
             // strip off the pound sign and comma
             var priceInGBP = parseFloat(gbpPriceNode.innerHTML.replace(/\u00A3/, "").replace(/,/, ""));
-            GM_log("priceInGBP=" + priceInGBP + ")");
+            GM_log("priceInGBP: " + priceInGBP);
 
             // Get the ex-VAT price, convert to EUR and add on the irish VAT
             var irishPrice = calculateIrishPrice(priceInGBP);
-            GM_log("irishPrice=" + irishPrice + ")");
+            GM_log("irishPrice: " + irishPrice);
 
             // Get the TBODY node under which we're going to put a new TR with the irish price
             // This node is 3 levels up from the GBP price node
