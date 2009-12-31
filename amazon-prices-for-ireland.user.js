@@ -18,8 +18,8 @@
     var todayDate = new Date();
     var todayAsString = todayDate.getDate() + "/" + todayDate.getMonth() + "/" + todayDate.getFullYear();
 
-    var IRISH_VAT_RATE = 0.215;
-    var UK_VAT_RATE = 0.15;
+    var IRISH_VAT_RATE = 0.21;
+    var UK_VAT_RATE = 0.175;
 
     function retrieveRate(callback) {
         GM_xmlhttpRequest({
