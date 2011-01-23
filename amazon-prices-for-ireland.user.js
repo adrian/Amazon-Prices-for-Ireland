@@ -2,7 +2,7 @@
 // @name          Amazon Prices for Ireland
 // @namespace     http://www.17od.com/amazon-for-ireland
 // @description   Show prices on amazon.co.uk in euros with the Irish VAT rate applied
-// @version       1.3
+// @version       1.4
 // @author        Adrian Smith
 // @homepage      http://github.com/adrian/Amazon-Prices-for-Ireland
 // @include       http://www.amazon.co.uk/*
@@ -19,7 +19,7 @@
     var todayAsString = todayDate.getDate() + "/" + todayDate.getMonth() + "/" + todayDate.getFullYear();
 
     var IRISH_VAT_RATE = 0.21;
-    var UK_VAT_RATE = 0.175;
+    var UK_VAT_RATE = 0.20;
 
     function retrieveRate(callback) {
         GM_xmlhttpRequest({
